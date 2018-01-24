@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 27 22:41:01 2017
-
-@author: CG-DTE
-"""
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 import gc
 
 properties1 = pd.read_csv('properties_2016.csv')
@@ -65,8 +58,6 @@ for column in column_names2:
 
 df = train.merge(properties1, how = 'left',on = 'parcelid')
 
-sns.countplot(x = 'buildingqualitytypeid', data = df)
-
 from scipy.stats import mode
 df['buildingqualitytypeid'].fillna(mode(df['buildingqualitytypeid']).mode[0],inplace = True)
 df['calculatedbathnbr'].fillna(mode(df['calculatedbathnbr']).mode[0],inplace = True)
@@ -87,7 +78,6 @@ column_names2.remove('regionidneighborhood')
 
 df['regionidzip'].fillna(mode(df['regionidzip']).mode[0],inplace = True)
 
-sns.countplot(x = 'unitcnt', data = df)
 df['unitcnt'].fillna(mode(df['unitcnt']).mode[0],inplace = True)
 df['yearbuilt'].fillna(mode(df['yearbuilt']).mode[0],inplace = True)
 df['unitcnt'].fillna(mode(df['unitcnt']).mode[0],inplace = True)
@@ -95,10 +85,7 @@ df['unitcnt'].fillna(mode(df['unitcnt']).mode[0],inplace = True)
 df.drop(['numberofstories'],axis = 1, inplace = True)
 
 column_names2.remove('numberofstories')
-'''
-from sklearn.preprocessing import Imputer
-imputer = Imputer()'''
-'''from scipy.stats import mean'''
+
 from numpy import mean
 
 df['structuretaxvaluedollarcnt'].fillna(mean(df['structuretaxvaluedollarcnt']),inplace = True)
@@ -107,32 +94,16 @@ df['taxvaluedollarcnt'].fillna(mean(df['taxvaluedollarcnt']),inplace = True)
 df['landtaxvaluedollarcnt'].fillna(mean(df['landtaxvaluedollarcnt']),inplace = True)
 df['taxamount'].fillna(mean(df['taxamount']),inplace = True)
 df['censustractandblock'].fillna(mean(df['censustractandblock']),inplace = True)
-
-
-# what are the types of data in all columns (object or float)
 dtype_df = df.dtypes.reset_index()
 dtype_df.columns = ['Count','Column Type']
 
-sample = pd.read_csv('sample_submission.csv')
 
 df_train= df.drop(['parcelid','transactiondate'],axis = 1)
 #new
-X_train = df.drop(['parcelid','logerror'],axis = 1)
-X_train.drop(['transactiondate'],axis = 1,inplace = True)
-Y_train = df['logerror']
-df_train = df_train.drop(['logerror'],axis = 1)
-X_train = df_train 
-import gc
-del df_train
+
 gc.collect()
 
-def creatingmatrices(X_train, Y_train):
-    xtrain = np.zeros([df.shape[0],X_train.shape[1]])
-    ytrain = np.zeros([Y_train.shape])
-    
-    
-    
-#lets make test data 
+#make test data 
 del column_names
 column_names2.remove('logerror')
 column_names2.remove('transactiondate')
@@ -144,8 +115,6 @@ del properties
 for column in column_names2:
     print("% of null values",column," = ",(pd.isnull(properties1[column]).sum()/2985217)*100)
 
-#2nd try 
-properties1 = properties
 from scipy.stats import mode
 
 #properties1.drop(['threequarterbathnbr'],inplace = True)
@@ -184,10 +153,7 @@ properties1['yearbuilt'].fillna(properties1['yearbuilt'].value_counts().argmax()
 proerties1.drop(['numberofstories'],axis = 1, inplace = True)
 
 column_names2.remove('numberofstories')
-'''
-from sklearn.preprocessing import Imputer
-imputer = Imputer()'''
-'''from scipy.stats import mean'''
+
 from numpy import mean
 
 properties1['structuretaxvaluedollarcnt'].fillna(mean(properties1['structuretaxvaluedollarcnt']),inplace = True)
@@ -225,9 +191,6 @@ df.drop(['parcelid'],axis =1, inplace = True)
 df_y = df['logerror']
 df.drop(['logerror'],axis = 1, inplace = True)
 #####
-del X_train1
-
-X_train.drop(['propertycountylandusecode'],axis = 1, inplace = True)
 
 trainX = np.zeros(shape=(90275,37))
 trainy = np.zeros(shape =(90275,1))
@@ -240,10 +203,7 @@ df.iloc[:,19] = encode.transform(df.iloc[:,19])
 properties1.iloc[:,21] = encode.fit_transform(properties1.iloc[:,21])
 properties1.iloc[:,19] = encode.fit_transform(properties1.iloc[:,19])
 properties1.drop(['parcelid'],axis = 1,inplace = True)
-properties1['sale_month'] = 12
-properties1['sale_year'] = 2017
-df.drop
-#
+
 
 
 for i in range(37):
@@ -254,21 +214,17 @@ for i in range(37):
     testX[:,i] = properties1.iloc[:,i]
     
     
-trainy[:,0] = Y_train
-    
+trainy[:,0] = df_y
 
 from sklearn.preprocessing import StandardScaler
 scalerx = StandardScaler()
-scalery = StandardScaler()
+
 trainX = scalerx.fit_transform(trainX)
 #
 testX = scalerx.transform(testX)
 #
-X1_train = scalerx.fit_transform(X1_train)
 
 from sklearn.metrics import mean_absolute_error
-from sklearn.neural_network import MLPRegressor
-regressor = MLPRegressor(hidden_layer_sizes= (2,18),activation="relu", solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001,max_iter= 200,random_state = 1)
 
 #trying keras
 import keras
@@ -304,85 +260,20 @@ classifier.compile(optimizer = 'Adam', loss = 'mean_squared_error', metrics = ['
 # Fitting the ANN to the Training set
 classifier.fit(trainX, trainy, batch_size = 100, nb_epoch = 10)
 
-#regressor.fit(trainX,trainy)
 train_pred = classifier.predict(trainX)
 mean_absolute_error(trainy,train_pred)
+
 test_pred1 = classifier.predict(testX)
-test_pred2 = classifier.predict(testX)
-test_pred3= classifier.predict(testX)
-test_pred4 = classifier.predict(testX)
-test_pred5 = classifier.predict(testX)
-test_pred6 = classifier.predict(testX)
-
-
-
-
-
-#predictions
-pred1 = regressor.predict(testX)
-pred2 = regressor.predict(testX)
-pred3 = regressor.predict(testX)
-pred4 = regressor.predict(testX)
-pred5 = regressor.predict(testX)
-pred6 = regressor.predict(testX)
-pred61 = regressor.predict(testX)
-properties1.drop(['propertycountylandusecode'],axis = 1, inplace = True)
-
-properties2 = np.zeros(shape = (2985217, 30))
-
-properties1.iloc[:,16] = encode.fit_transform(properties1.iloc[:,16])
-for i in range(29):
-    properties2[:,i] = properties1.iloc[:,i]
-
-properties2 = scalerx.fit_transform(properties2)
-
 
 
 sample = pd.read_csv('sample_submission.csv')
 
 del properties1
 
-properties1 = pd.read_csv('properties_2016.csv')
-del properties1
-
-test_pred = regressor.predict(properties2)
-'''
 for i in range(1,7):
-    sample.iloc[:,i] = test_pred
-    '''
-sample.iloc[:,1] = test_pred1
-sample.iloc[:,2] = test_pred1
-sample.iloc[:,3] = test_pred1  
-sample.iloc[:,4] = test_pred1  
-sample.iloc[:,5] = test_pred1  
-sample.iloc[:,6] = test_pred1  
+    sample.iloc[:,i] = test_pred1
 
+sample.to_csv('result.csv', index = False)
+ 
 sample.to_csv('sol1.csv',index = False)   
 
-
-
-mean_absolute_error(trainy,train_pred)
-
-
-#adding month and year to the data 
-
-df['transactiondate'] = pd.to_datetime(df['transactiondate'])
-df['sale_month'] = df['transactiondate'].apply(lambda x: (x.to_pydatetime()).month)
-df['sale_year'] = df['transactiondate'].apply(lambda x: (x.to_pydatetime()).year)
-
-df.drop(['transactiondate'],axis = 1, inplace = True)
-
-
-properties = pd.read_csv('properties_2016.csv')
-properties = properties.iloc[:200000,38:]
-
-from statsmodels.imputation.mice import MICEData
-data = properties.iloc[:,1:4]
-imp1 = MICEData(data)
-imp.set_imputer('x1', formula='x2 + np.square(x2) + x3')
-imp.update_all()
-imp.properties.iloc[:,:2]
-properties.iloc[:,1:4] = imp.data
-
-
-    
